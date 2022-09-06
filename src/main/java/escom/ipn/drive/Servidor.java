@@ -65,6 +65,8 @@ public class Servidor {
       try {
           String listadoFicheros = "";
           
+          System.out.println("RUTA: " + ruta_archivos);
+          
           File f = new File(ruta_archivos);
           File[] ficheros = f.listFiles();
           
@@ -74,6 +76,7 @@ public class Servidor {
               } else {
                   listadoFicheros = listadoFicheros + ";" + ficheros[x].getName();
               }
+              System.out.println(ficheros[x].getName());
               
           }
           dos.writeUTF(listadoFicheros);

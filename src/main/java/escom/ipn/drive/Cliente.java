@@ -1,4 +1,4 @@
-package ipn.escom.drive;
+package escom.ipn.drive;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
