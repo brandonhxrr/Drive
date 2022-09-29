@@ -31,92 +31,112 @@ public class Servidor {
     String file;
 
     downloadFile(getServerSocket(1234), createFile());
-    
+
   }
-  
+
   private static ServerSocket getServerSocket(int port) {
-      
-      ServerSocket s = null;
-      
-      try {
-          s = new ServerSocket(1234);
-          s.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-      } catch (IOException ex) {
-          Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
-      }
-      
-      return s;
+
+    ServerSocket s = null;
+
+    try {
+      s = new ServerSocket(1234);
+      s.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+    } catch (IOException ex) {
+      Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+    return s;
   }
-  
-  private static String createFile(){
+
+  private static String createFile() {
     File f = new File("");
     String ruta = f.getAbsolutePath();
-    String carpeta="archivos";
-    String ruta_archivos = ruta+"\\"+carpeta+"\\";
-    System.out.println("ruta:"+ruta_archivos);
+    String carpeta = "archivos";
+    //String ruta_archivos = ruta+"\\"+carpeta+"\\";//WINDOWS
+    String ruta_archivos = ruta + "/" + carpeta + "/"; //Linux
+    System.out.println("ruta:" + ruta_archivos);
     File f2 = new File(ruta_archivos);
     f2.mkdirs();
     f2.setWritable(true);
 
     return ruta_archivos;
   }
-  
-  private static void listFiles(DataOutputStream dos, String ruta_archivos) {
-      try {
-          String listadoFicheros = "";
-          
-          System.out.println("RUTA: " + ruta_archivos);
-          
-          File f = new File(ruta_archivos);
-          File[] ficheros = f.listFiles();
-          
-          for (int x=0;x<ficheros.length;x++){
-              if(listadoFicheros.equals("")) {
-                  listadoFicheros = ficheros[x].getName();
-              } else {
-                  listadoFicheros = listadoFicheros + ";" + ficheros[x].getName();
-              }
-              System.out.println(ficheros[x].getName());
-              
-          }
-          dos.writeUTF(listadoFicheros);
-      } catch (IOException ex) {
-          Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+
+  public static void listFiles(DataOutputStream dos, String ruta_archivos) {
+    try {
+      String listadoFicheros = "";
+
+      System.out.println("RUTA: " + ruta_archivos);
+
+      File f = new File(ruta_archivos);
+      File[] ficheros = f.listFiles();
+
+      for (int x = 0; x < ficheros.length; x++) {
+        if (listadoFicheros.equals("")) {
+          listadoFicheros = ficheros[x].getName();
+        } else {
+          listadoFicheros = listadoFicheros + ";" + ficheros[x].getName();
+        }
+        System.out.println(ficheros[x].getName());
+
       }
+      dos.writeUTF(listadoFicheros);
+    } catch (IOException ex) {
+      Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+    }
   }
-  
-  private static void downloadFile(ServerSocket s, String ruta_archivos){
-      for(;;){
-          try {
-              Socket cl = s.accept();
-              System.out.println("Cliente conectado desde "+cl.getInetAddress()+":"+cl.getPort());
-              DataInputStream dis = new DataInputStream(cl.getInputStream());
-              String nombre = dis.readUTF();
-              long tam = dis.readLong();
-              System.out.println("Comienza descarga del archivo: "+nombre+" de "+tam+" bytes\n\n");
-              DataOutputStream dos = new DataOutputStream(new FileOutputStream(ruta_archivos+nombre));
-              long recibidos=0;
-              int l=0, porcentaje=0;
-              while(recibidos<tam){
-                  byte[] b = new byte[1500];
-                  l = dis.read(b);
-                  System.out.println("leidos: "+l);
-                  dos.write(b,0,l);
-                  dos.flush();
-                  recibidos = recibidos + l;
-                  porcentaje = (int)((recibidos*100)/tam);
-                  System.out.print("\rRecibido el "+ porcentaje +" % del archivo");
-              }//while
-              System.out.println("Archivo recibido...");
-              System.out.println("\nListado de archivos: ");
-              listFiles(dos, ruta_archivos);
-              dos.close();
-              dis.close();
-              cl.close();
-          } //for
-          catch (IOException ex) {
-              Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
-          }
-          }
+
+  private static void downloadFile(ServerSocket s, String ruta_archivos) {
+    for (;;) {
+      try {
+        Socket cl = s.accept();
+
+        DataInputStream dis = new DataInputStream(cl.getInputStream());
+
+        System.out.println("Cliente conectado desde " + cl.getInetAddress() + ":" + cl.getPort());
+        //DataInputStream dis = new DataInputStream(cl.getInputStream());
+        String nombre = dis.readUTF();
+        long tam = dis.readLong();
+        String parent = dis.readUTF();
+
+        DataOutputStream dos = null;
+
+        if (parent.equals("")) {
+          System.out.println("Comienza descarga del archivo: " + nombre + " de " + tam + " bytes\n\n");
+          dos = new DataOutputStream(new FileOutputStream(ruta_archivos + nombre));
+        } else {
+          File f2 = new File(ruta_archivos + "/" + parent + "/");
+          f2.mkdirs();
+          f2.setWritable(true);
+
+          System.out.println("Comienza descarga del archivo: " + parent + "/" + nombre + " de " + tam + " bytes\n\n");
+          dos = new DataOutputStream(new FileOutputStream(ruta_archivos + "/" + parent + "/" + nombre));
+        }
+
+        long recibidos = 0;
+        int l = 0, porcentaje = 0;
+        while (recibidos < tam) {
+          byte[] b = new byte[1500];
+          l = dis.read(b);
+          System.out.println("leidos: " + l);
+          dos.write(b, 0, l);
+          dos.flush();
+          recibidos = recibidos + l;
+          porcentaje = (int)((recibidos * 100) / tam);
+          System.out.print("\rRecibido el " + porcentaje + " % del archivo");
+        } //while
+        System.out.println("Archivo recibido...");
+        System.out.println("\nListado de archivos: ");
+        listFiles(dos, ruta_archivos);
+        
+        dos.close();
+        dis.close();
+        cl.close();
+
+      } //for
+      catch (IOException ex) {
+        Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
   }
 }
