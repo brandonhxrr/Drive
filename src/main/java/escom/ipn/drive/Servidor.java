@@ -52,9 +52,15 @@ public class Servidor {
     File f = new File("");
     String ruta = f.getAbsolutePath();
     String carpeta = "archivos";
-    //String ruta_archivos = ruta+"\\"+carpeta+"\\";//WINDOWS
-    String ruta_archivos = ruta + "/" + carpeta + "/"; //Linux
+    String ruta_archivos = "";
+    
+    if(System.getProperty("os.name").equals("Windows")) {
+        ruta_archivos = ruta+"\\"+carpeta+"\\";
+    }else {
+        ruta_archivos = ruta + "/" + carpeta + "/";
+    }
     System.out.println("ruta:" + ruta_archivos);
+    
     File f2 = new File(ruta_archivos);
     f2.mkdirs();
     f2.setWritable(true);
@@ -71,7 +77,7 @@ public class Servidor {
       File f = new File(ruta_archivos);
       File[] ficheros = f.listFiles();
 
-      for (int x = 0; x < ficheros.length; x++) {
+      for(int x = 0; x < ficheros.length; x++) {
         if (listadoFicheros.equals("")) {
           listadoFicheros = ficheros[x].getName();
         } else {
@@ -93,8 +99,8 @@ public class Servidor {
 
         DataInputStream dis = new DataInputStream(cl.getInputStream());
 
-        System.out.println("Cliente conectado desde " + cl.getInetAddress() + ":" + cl.getPort());
-        //DataInputStream dis = new DataInputStream(cl.getInputStream());
+        System.out.println("\nCliente conectado desde " + cl.getInetAddress() + ":" + cl.getPort());
+        
         String nombre = dis.readUTF();
         long tam = dis.readLong();
         String parent = dis.readUTF();
@@ -115,17 +121,18 @@ public class Servidor {
 
         long recibidos = 0;
         int l = 0, porcentaje = 0;
+        
         while (recibidos < tam) {
           byte[] b = new byte[1500];
           l = dis.read(b);
-          System.out.println("leidos: " + l);
+          System.out.println("Leidos: " + l);
           dos.write(b, 0, l);
           dos.flush();
           recibidos = recibidos + l;
           porcentaje = (int)((recibidos * 100) / tam);
-          System.out.print("\rRecibido el " + porcentaje + " % del archivo");
-        } //while
-        System.out.println("Archivo recibido...");
+          System.out.println("\rRecibido el " + porcentaje + " % del archivo");
+        } 
+        System.out.println("\nArchivo recibido...");
         System.out.println("\nListado de archivos: ");
         listFiles(dos, ruta_archivos);
         
@@ -133,7 +140,7 @@ public class Servidor {
         dis.close();
         cl.close();
 
-      } //for
+      }
       catch (IOException ex) {
         Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
       }

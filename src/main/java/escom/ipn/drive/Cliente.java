@@ -11,21 +11,11 @@ import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 
 public class Cliente {
-  //private static DataOutputStream dos = null;
-  //private static DataInputStream dis = null;
-  public static void main(String[] args) {
-    try {
-      establecerConexion();
-
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  public static void establecerConexion() throws IOException {
-
+    
+  public static void main(String[] args) throws IOException {
     subir();
   }
+
   public static void subir() throws IOException {
     JFileChooser jf = new JFileChooser();
     jf.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -46,13 +36,13 @@ public class Cliente {
         int pto = 1234;
         String dir = "127.0.0.1";
         Socket cl = new Socket(dir, pto);
-        System.out.println("Conexion con servidor establecida");
+        System.out.println("\nConexion con servidor establecida\n");
         DataOutputStream dos = new DataOutputStream(cl.getOutputStream());
 
         String nombre = f.getName();
         String path = f.getAbsolutePath();
         long tam = f.length();
-        System.out.println("Preparandose pare enviar archivo " + path + " de " + tam + " bytes\n\n");
+        System.out.println("Preparándose pare enviar archivo " + path + " de " + tam + " bytes\n\n");
 
         DataInputStream dis = new DataInputStream(new FileInputStream(path));
         dos.writeUTF(nombre);
@@ -60,6 +50,7 @@ public class Cliente {
         dos.writeLong(tam);
         dos.writeUTF(parent);
         dos.flush();
+        
         long enviados = 0;
         int l = 0, porcentaje = 0;
         
@@ -67,7 +58,7 @@ public class Cliente {
           byte[] b = new byte[1500];
           l = dis.read(b);
 
-          System.out.println("enviados: " + l);
+          System.out.println("Enviados: " + l);
 
           dos.write(b, 0, l);
           dos.flush();
@@ -76,7 +67,7 @@ public class Cliente {
 
           System.out.print("\rEnviado el " + porcentaje + " % del archivo");
         }
-        System.out.println("\nArchivo enviado..");
+        System.out.println("\n\nArchivo enviado...\n");
         
         dis.close();
         dos.close();
@@ -88,19 +79,14 @@ public class Cliente {
   }
 
   public static void subirDirectorio(File f, String parent) {
-
     File[] ficheros = f.listFiles();
     String nombre = f.getName();
-    System.out.println("NOMBRE FICHERO: " + nombre);
     for (int x = 0; x < ficheros.length; x++) {
-        System.out.println("Parent: " + parent + "\nNombre: " + nombre);
       if (ficheros[x].isFile()) {
         subirArchivo(ficheros[x], parent+"/"+nombre);
       } else {
-        subirDirectorio(ficheros[x], nombre);
+        subirDirectorio(ficheros[x], parent+"/"+ nombre);
       }
-
     }
-
   }
 }
