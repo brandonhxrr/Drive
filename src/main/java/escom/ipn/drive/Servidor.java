@@ -13,22 +13,16 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.StandardSocketOptions;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Servidor {
 
   private static Socket socket;
+  private static Scanner sc = new Scanner(System.in);
 
   public static void main(String[] args) {
-
-    DataOutputStream output;
-    BufferedInputStream bis;
-    BufferedOutputStream bos;
-
-    byte[] receivedData;
-    int in ;
-    String file;
 
     downloadFile(getServerSocket(1234), createFile());
 
@@ -39,7 +33,7 @@ public class Servidor {
     ServerSocket s = null;
 
     try {
-      s = new ServerSocket(1234);
+      s = new ServerSocket(port);
       s.setOption(StandardSocketOptions.SO_REUSEADDR, true);
     } catch (IOException ex) {
       Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
@@ -68,32 +62,38 @@ public class Servidor {
     return ruta_archivos;
   }
 
-  public static void listFiles(DataOutputStream dos, String ruta_archivos) {
-    try {
-      String listadoFicheros = "";
+  public static void listFiles(String ruta_archivos, int level) {
 
-      System.out.println("RUTA: " + ruta_archivos);
+    File f = new File(ruta_archivos);
+    File[] ficheros = f.listFiles();
 
-      File f = new File(ruta_archivos);
-      File[] ficheros = f.listFiles();
-
-      for(int x = 0; x < ficheros.length; x++) {
-        if (listadoFicheros.equals("")) {
-          listadoFicheros = ficheros[x].getName();
-        } else {
-          listadoFicheros = listadoFicheros + ";" + ficheros[x].getName();
+    for (File fichero : ficheros) {
+        for (int i = 0; i < level; i++) {
+            System.out.print("\t");
         }
-        System.out.println(ficheros[x].getName());
-
-      }
-      dos.writeUTF(listadoFicheros);
-    } catch (IOException ex) {
-      Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
-    }
+        System.out.println(fichero.getName());
+        if(fichero.isDirectory()) {
+            listFiles(fichero.getPath(), level+1);
+        }
+    } 
   }
 
   private static void downloadFile(ServerSocket s, String ruta_archivos) {
     for (;;) {
+        System.out.println("Servidor en espera, selecciona una opcion: \n");
+        System.out.println("1. Listar archivos");
+        System.out.println("2. Esperar");
+        System.out.println("3. Salir");
+        System.out.print("Su opcion: ");
+        switch(sc.nextInt()) {
+            case 1:
+                listFiles(ruta_archivos, 0);
+                break;
+            case 2:
+                break;
+            case 3:
+                return;
+        }
       try {
         Socket cl = s.accept();
 
@@ -125,16 +125,19 @@ public class Servidor {
         while (recibidos < tam) {
           byte[] b = new byte[1500];
           l = dis.read(b);
+          
           System.out.println("Leidos: " + l);
+          
           dos.write(b, 0, l);
           dos.flush();
           recibidos = recibidos + l;
           porcentaje = (int)((recibidos * 100) / tam);
+          
           System.out.println("\rRecibido el " + porcentaje + " % del archivo");
         } 
         System.out.println("\nArchivo recibido...");
         System.out.println("\nListado de archivos: ");
-        listFiles(dos, ruta_archivos);
+        listFiles(ruta_archivos, 0);
         
         dos.close();
         dis.close();

@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -13,7 +14,21 @@ import javax.swing.JFileChooser;
 public class Cliente {
     
   public static void main(String[] args) throws IOException {
-    subir();
+      Scanner sc = new Scanner(System.in);
+      while(true){
+        System.out.println("Cliente en espera, selecciona una opcion: \n");
+        System.out.println("1. Subir archivos");
+        System.out.println("2. Salir");
+        System.out.println("Su opcion: ");
+        switch(sc.nextInt()) {
+            case 1:
+                subir();
+                break;
+            case 2:
+                return;
+        }
+      }
+      
   }
 
   public static void subir() throws IOException {
